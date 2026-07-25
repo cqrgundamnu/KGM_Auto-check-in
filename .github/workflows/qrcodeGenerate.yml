@@ -1,0 +1,33 @@
+name: qrcodeGenerate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm run install
+
+      - name: Generate QR image
+        run: node qrcodeGenerate.js
+        env:
+          PAT: ${{ secrets.PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Publish QR image
+        uses: actions/upload-artifact@v4
+        with:
+          name: qrcode
+          path: qrcode.png
+          retention-days: 1
