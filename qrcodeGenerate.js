@@ -15,6 +15,8 @@ async function generate() {
     console.log("二维码已生成，请下载本次运行的 qrcode artifact 后扫码。");
   } finally {
     close_api(api);
+  }  if (api.killed) {
+    process.exit(0);
   }
 }
 
