@@ -44,6 +44,9 @@ jobs:
           } finally {
             close_api(api);
           }
+                    if (api.killed) {
+            process.exit(0);
+          }
           EOF
         env:
           PAT: ${{ secrets.PAT }}
