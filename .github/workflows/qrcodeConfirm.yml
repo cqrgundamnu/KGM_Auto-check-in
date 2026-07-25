@@ -1,0 +1,51 @@
+name: qrcodeConfirm
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  confirm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm run install
+
+      - name: Confirm QR login
+        run: |
+          node --input-type=module <<'EOF'
+          import { close_api, delay, send, startService } from "./utils/utils.js";
+          import { setRepoSecret } from "./utils/githubSecrets.js";
+
+          const api = startService();
+          await delay(2000);
+          try {
+            const result = await send(
+              "/login/qr/check?key=" + process.env.QRKEY + "&timestrap=" + Date.now(),
+              "GET",
+              {}
+            );
+            if (result?.data?.status !== 4) {
+              throw new Error("尚未扫码确认，或二维码已过期");
+            }
+            const userinfo = JSON.stringify([
+              { userid: result.data.userid, token: result.data.token }
+            ]);
+            setRepoSecret("USERINFO", userinfo);
+            console.log("登录成功，USERINFO 已保存。");
+          } finally {
+            close_api(api);
+          }
+          EOF
+        env:
+          PAT: ${{ secrets.PAT }}
+          QRKEY: ${{ secrets.QRKEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
